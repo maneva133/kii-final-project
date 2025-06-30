@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-replication-config
+  namespace: hotel-app
+data:
+  setup-replication.sh: |
+    #!/bin/bash
+    set -e
+
+    # Get pod index from hostname
+    POD_INDEX=${HOSTNAME##*-}
+
+    if [ "$POD_INDEX" = "0" ]; then
+      echo "Setting up as MASTER (postgres-statefulset-0)"
+
+      # Master configuration
+      cat >> /var/lib/postgresql/data/postgresql.conf <<EOF
+    wal_level = replica
+    max_wal_senders = 10
+    max_replication_slots = 10
+    hot_standby = on
+    archive_mode = on
+    archive_command = 'test ! -f /var/lib/postgresql/data/archive/%f && cp %p /var/lib/postgresql/data/archive/%f'
+    listen_addresses = '*'
+    EOF
+
+      # Create archive directory
+      mkdir -p /var/lib/postgresql/data/archive
+
+      # Setup pg_hba.conf for replication
+      echo "host replication replicator 0.0.0.0/0 md5" >> /var/lib/postgresql/data/pg_hba.conf
+      echo "host all all 0.0.0.0/0 md5" >> /var/lib/postgresql/data/pg_hba.conf
+
+    else
+      echo "Setting up as SLAVE (postgres-statefulset-$POD_INDEX)"
+
+      # Wait for master to be ready
+      until pg_isready -h postgres-statefulset-0.postgres-headless-service.hotel-app.svc.cluster.local -p 5432 -U postgres; do
+        echo "Waiting for master database..."
+        sleep 2
+      done
+
+      # Remove any existing data
+      rm -rf /var/lib/postgresql/data/*
+
+      # Create base backup from master
+      PGPASSWORD=replicator_password pg_basebackup -h postgres-statefulset-0.postgres-headless-service.hotel-app.svc.cluster.local -D /var/lib/postgresql/data -U replicator -W -v -R -X stream
+
+      # Set up recovery configuration
+      cat >> /var/lib/postgresql/data/postgresql.conf <<EOF
+    hot_standby = on
+    primary_conninfo = 'host=postgres-statefulset-0.postgres-headless-service.hotel-app.svc.cluster.local port=5432 user=replicator password=replicator_password'
+    EOF
+
+      # Create standby.signal file (PostgreSQL 12+)
+      touch /var/lib/postgresql/data/standby.signal
+    fi

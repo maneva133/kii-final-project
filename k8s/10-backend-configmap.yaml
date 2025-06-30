@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: hotel-app
+data:
+  # WRITE operations (INSERT, UPDATE, DELETE) - Always go to master
+  SPRING_DATASOURCE_WRITE_URL: "jdbc:postgresql://postgres-master-service:5432/emt_lab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=CET"
+  # READ operations (SELECT) - Can go to any replica
+  SPRING_DATASOURCE_READ_URL: "jdbc:postgresql://postgres-read-service:5432/emt_lab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=CET"
+  SPRING_DATASOURCE_USERNAME: "emt"
+
+  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres-master-service:5432/emt_lab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=CET"

@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:80"
+    depends_on:
+      - backend
+    networks:
+      - hotel-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/emt_lab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=CET
+      - SPRING_DATASOURCE_USERNAME=emt
+      - SPRING_DATASOURCE_PASSWORD=emt
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - hotel-network
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      - POSTGRES_DB=emt_lab
+      - POSTGRES_USER=emt
+      - POSTGRES_PASSWORD=emt
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+#      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "2345:5432"
+    networks:
+      - hotel-network
+
+volumes:
+  postgres_data:
+
+networks:
+  hotel-network:
+    driver: bridge 
