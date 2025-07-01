@@ -1,7 +1,6 @@
 # 🏨 Hotel Management System
 
 This is a Hotel Management System web application deployed using containerized microservices and modern DevOps practices. The goal of this project is to demonstrate the full DevOps lifecycle including Dockerization, orchestration with Docker Compose and Kubernetes, CI/CD pipelines, and secure, scalable deployment strategies.
-
 ---
 
 ## ✅ Project Features
