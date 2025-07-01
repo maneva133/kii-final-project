@@ -17,9 +17,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/emt_lab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=CET
-      - SPRING_DATASOURCE_USERNAME=emt
-      - SPRING_DATASOURCE_PASSWORD=emt
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
     ports:
       - "8080:8080"
     depends_on:
@@ -30,12 +30,12 @@ services:
   db:
     image: postgres:14-alpine
     environment:
-      - POSTGRES_DB=emt_lab
-      - POSTGRES_USER=emt
-      - POSTGRES_PASSWORD=emt
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-#      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+#     - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "2345:5432"
     networks:
@@ -46,4 +46,4 @@ volumes:
 
 networks:
   hotel-network:
-    driver: bridge 
+    driver: bridge
